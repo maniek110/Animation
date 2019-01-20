@@ -13,6 +13,7 @@ public class Game implements Runnable{
     private Graphics g;
     int x=0;
 
+    private State GameState;
 
     public Game(int w,int h,String title){
         this.w=w;
@@ -22,9 +23,12 @@ public class Game implements Runnable{
     public void init(){
         board=new Board(w,h,title);
         Assety.init();
+        GameState=new GmaeState();
+        State.setState(GameState);
     }
     private void tick(){
-        x++;
+        if(State.getCurrState()!=null)
+            State.getCurrState().tick();
     }
     private void render(){
         bufferStrategy=board.getCanvas().getBufferStrategy();
@@ -36,11 +40,8 @@ public class Game implements Runnable{
         //___________CLEAR___________
         g.clearRect(0,0,w,h);
         //_________DRAWING___________
-        g.setColor(Color.blue);
-        g.fillRect(0,0,w,h);
-        g.drawImage(Assety.player1,x,0,null);
-        g.drawOval(100,100,300,300);
-        g.drawRect(10,10,20,20);
+        if(State.getCurrState()!=null)
+            State.getCurrState().render(g);
         //_________STOP DRAWING______
         bufferStrategy.show();
         g.dispose();
@@ -48,7 +49,7 @@ public class Game implements Runnable{
 
     public void run() {
         init();
-        int fps=30;
+        int fps=60;
         double timePerTick=1000000000/fps;
         double delta=0;
         long now;
@@ -60,9 +61,6 @@ public class Game implements Runnable{
             delta+=(now-last)/timePerTick;
             timer+=now-last;
             last=now;
-            System.out.println("NOW="+now);
-            System.out.println("LAST="+last);
-            System.out.println("DELTA="+delta);
             if(delta>=1) {
                 tick();
                 render();
@@ -73,8 +71,6 @@ public class Game implements Runnable{
                 System.out.println("fps="+tick);
                 timer=0;
                 tick=0;
-                g.setColor(Color.BLACK);
-                g.drawString(String.valueOf(tick),10,10);
             }
         }
         stop();
